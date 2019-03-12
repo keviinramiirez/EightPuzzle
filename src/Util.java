@@ -16,6 +16,15 @@ public class Util
 
 		return matrix;
 	}
+	
+	/** return a string of the values within the given matrix. */
+	public static String toString(int[][] matrix) {
+		String s = "";
+		for (int r = 0; r < matrix.length; r++)
+			for (int c = 0; c < matrix[r].length; c++)
+				s += matrix[r][c];
+		return s;
+	}
 
 	/** creates a string array in order from 
 	 *  upper-left to lower-right of the 2d array.
@@ -28,6 +37,21 @@ public class Util
 				s += matrix[r][c];
 
 		return s;
+	}
+	
+	
+	/** Checks if given state has a parent nearby that has same matrix */
+	public static boolean equalsNearbyParent(State state) {
+		int i = 10;
+		State parent = state.parent;
+		while (parent != null && i > 0) {
+			if (state.equals(parent)) {
+				System.out.println("equals nearby parent");
+				return true;
+			}
+			parent = parent.parent;
+		}
+		return false;
 	}
 	
 	
@@ -48,7 +72,7 @@ public class Util
 	public static int[][] shuffleMatrix(int[][] matrix) {
 		matrix = Util.shallowCopyOf(matrix);
 		int r = 2, c = 2;
-		for (int i = 0; i < 30; i++) {
+		for (int i = 0; i < 100; i++) {
 			switch (new Random().nextInt(4)) {
 				case 0:
 					// move up
@@ -69,7 +93,6 @@ public class Util
 					// move left
 					if (Util.validRowOrCol(c - 1))
 						Util.swap(matrix, r, c, r, c-- - 1);
-					break;
 			}
 		}
 

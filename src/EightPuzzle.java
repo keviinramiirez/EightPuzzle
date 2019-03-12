@@ -1,5 +1,6 @@
 import java.util.ArrayDeque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
@@ -31,12 +32,16 @@ public class EightPuzzle
 
 	/** shall contain the path from initial state to goal state. */
 	LinkedList<State> path = new LinkedList<>();
+	
+	/** Keeps track of the states that are visited */
+	static HashSet<String> visited = new HashSet<>();
 
 	/** maps each integer values of goal matrix 
 	    with its position as a string.  
 	    map = [int -> "row,col"]
 	 */
 	static Map<Integer, String> goalMap;
+
 
 	/** Initializes both initial state and goal state as matrices (2d arrays)
 	 *  with the given states represented as strings */
@@ -56,13 +61,16 @@ public class EightPuzzle
 	public EightPuzzle(int[][] initMatrix, int[][] goalMatrix) {
 		this.initMatrix = initMatrix;
 		this.goalMatrix = goalMatrix;
-		goalMap = new HashMap<>();
+		EightPuzzle.goalMap = new HashMap<>();
 
+		// maps value with its position as a string
 		for (int r = 0; r < goalMatrix.length; r++)
 			for (int c = 0; c < goalMatrix[r].length; c++)
 				goalMap.put(goalMatrix[r][c], r+","+c);
-
-		qTrack.add(new State(initMatrix));
+		
+		State initState = new State(initMatrix);
+		EightPuzzle.visited.add(initState.getMatrixString());
+		this.qTrack.add(initState);
 	}
 
 
@@ -79,24 +87,28 @@ public class EightPuzzle
 
 	/** iterative process of solving the puzzle. */
 	public void solve() {
+		int count = 0;
 		while (!qTrack.isEmpty()) {
 			State currState = qTrack.peek();
 			if (currState.isSolved()) {
 				this.storePath();
 				return;
 			}
-
+			
+			// 
 			currState.evaluateChildStates();
 
 			// add the Next States to be evaluated into the queue
 			for (State puzzleState : currState.childStates) {
-//				puzzleState.parent = qTrack.peek();
 				qTrack.add(puzzleState);
+				visited.add(puzzleState.getMatrixString());
 			}
 
 			// dequeue the first state for it to not be evaluated again
 			qTrack.poll();
+			count++;
 		}
+		System.out.println(count);
 	}
 
 	/** checks if the given matrix is admissible by checking if the 
@@ -125,9 +137,13 @@ public class EightPuzzle
 
 	/** print the path from initial state to goal state. */
 	public void printPath() {
-		System.out.println("----- PATH FROM INITIAL TO GOAL STATE -----");
-		for (State state : this.path)
-			Util.printMatrix(state.matrix);
+		if (this.path.isEmpty())
+			System.out.println("Couldn't find path because of equal state matrices on the tree");
+		else {
+			System.out.println("----- PATH FROM INITIAL TO GOAL STATE -----");
+			for (State state : this.path)
+				Util.printMatrix(state.matrix);
+		}
 	}
 
 
@@ -139,7 +155,6 @@ public class EightPuzzle
 //		int[][] initMatrix = { {1, 8, 2}, {0, 4, 3}, {7, 6, 5} };
 //		int[][] goalMatrix = { {1, 2, 3}, {4, 5, 6}, {7, 8, 0} };
 //		EightPuzzle eightPuzzle = new EightPuzzle(initMatrix, goalMatrix);
-
 		
 		/*
 		 * Code to instantiate specific initial and goal matrix

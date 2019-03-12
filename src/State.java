@@ -25,11 +25,13 @@ public class State
 	/** position (as a string) of the zero value within the matrix */
 	private String zeroPos;
 	
+	/** string of the values within the given matrix */
+	private String strMatrix;
+	
 	/** total Manhattan Distance */
 	private int totalManhattanDistance;
 
 
-	/**  */
 	public State(int[][] matrix) { 
 		this(matrix, null, 0);
 	}
@@ -52,11 +54,13 @@ public class State
 		this.costIncurred = costIncurred;
 		this.childStates = new LinkedList<>();
 		this.zeroPos = "";
+		this.strMatrix = "";
 
 		// locate where zero is positioned
 		outerloop:
 			for (int r = 0; r < matrix.length; r++) {
 				for (int c = 0; c < matrix[r].length; c++) {
+					strMatrix += matrix[r][c];
 					if (matrix[r][c] == 0) {
 						zeroPos = r+","+c;
 						break outerloop;
@@ -64,10 +68,12 @@ public class State
 				}
 			}
 
-		// calculate the total Manhattan distance of this state
+		// calculate the total Manhattan distance of this state.
+		// Also, concatenates all values of this state's matrix
 		totalManhattanDistance = 0;
 		for (int r = 0; r < matrix.length; r++) {
 			for (int c = 0; c < matrix[r].length; c++) {
+				strMatrix += matrix[r][c];
 				if (matrix[r][c] != 0) {
 					int rGoal = Integer.parseInt(EightPuzzle.goalMap.get(matrix[r][c]).substring(0, 1));
 					int cGoal = Integer.parseInt(EightPuzzle.goalMap.get(matrix[r][c]).substring(2));
@@ -77,8 +83,11 @@ public class State
 		}
 	}
 	
-	/** return the parent instance */
+	/** returns the parent instance */
 	public State getParent() { return this.parent; }
+	
+	/** returns a string containing all the values within the instance matrix  */
+	public String getMatrixString() { return this.strMatrix; }
 		
 	/** true if the instance containing the total Manhattan Distance 
 	 *  equals zero.  Otherwise false. */
@@ -102,13 +111,15 @@ public class State
 					count++;
 		return count;
 	}
+	
 
 	/** Evaluate each child state and only stores the ones
-	 *  that have the least amount of estimated distance f(n). 
+	 *  that have the least amount of estimated distance f(n).
+	 *  <br>*Note: There are a maximum of 4 child states 
 	 */
 	public void evaluateChildStates() {
 		if (!childStates.isEmpty()) return;
-
+		
 		childStates = new LinkedList<>();
 		
 		// row and column position of the zero value within goal state
@@ -124,7 +135,7 @@ public class State
 		if (Util.validRowOrCol(cZero+1)) right = matrix[rZero][cZero+1];
 		if (Util.validRowOrCol(rZero+1)) down  = matrix[rZero+1][cZero];
 
-		// keeps track of previous estimated distances along the process
+		// shall keep track of previous estimated distances along the process
 		int prevDist = Integer.MAX_VALUE;
 
 		// evaluate/iterate over all values within the 2d array
@@ -137,24 +148,25 @@ public class State
 					int[][] newState = Util.shallowCopyOf(matrix);
 					Util.swap(newState, rZero, cZero, r, c);
 
-					State currState = new State(newState, this.costIncurred+1);
+					State currState = new State(newState, this, this.costIncurred+1);
 					int currDist = currState.estimatedDistance();
 
-					/*********************/
-					// ensures to only store the child states that 
-					// have the least estimated distance.
-					if (currDist < prevDist)
-						childStates.removeAll(childStates);
+					// is statement ensures to not evaluate a state that has already been evaluated
+					if (!EightPuzzle.visited.contains(currState.strMatrix)) {
+						/********************************************/
+						// ensures to only store the child states that 
+						// have the least estimated distance.
+						if (currDist < prevDist)
+							childStates.removeAll(childStates);
 
-					if (currDist <= prevDist) {
-						prevDist = currDist;
-						currState.parent = this;
-						childStates.add(currState);
+						if (currDist <= prevDist) {
+							prevDist = currDist;
+							childStates.add(currState);
+						}
+						/********************************************/
 					}
-					/*********************/
 				}
 			}
 		}
-		System.out.print("");
 	}
 }
