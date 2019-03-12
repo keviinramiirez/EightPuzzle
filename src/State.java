@@ -7,13 +7,16 @@ import java.util.LinkedList;
  */
 public class State
 {
+	/** representation of the puzzle */
 	int[][] matrix;
-	LinkedList<State> childStates;
-	int costIncurred;
 	
+	/**  */
+	int costIncurred;
 	State parent;
+	LinkedList<State> childStates;
 	private String zeroPos;
 	private int totalManhattanDistance;
+
 
 	public State(int[][] matrix) { 
 		this(matrix, null, 0);
@@ -29,6 +32,7 @@ public class State
 		this.parent = parent;
 		this.costIncurred = costIncurred;
 		this.childStates = new LinkedList<>();
+		this.zeroPos = "";
 
 		// locate where zero is positioned
 		outerloop:
@@ -41,6 +45,7 @@ public class State
 				}
 			}
 
+		// calculate the total Manhattan distance of this state
 		totalManhattanDistance = 0;
 		for (int r = 0; r < matrix.length; r++) {
 			for (int c = 0; c < matrix[r].length; c++) {
@@ -81,9 +86,10 @@ public class State
 	 */
 	public void evaluateChildStates() {
 		if (!childStates.isEmpty()) return;
-			
+
 		childStates = new LinkedList<>();
-		// row and column position of the zero within goal state
+		
+		// row and column position of the zero value within goal state
 		int rZero = Integer.parseInt(zeroPos.substring(0, 1));
 		int cZero = Integer.parseInt(zeroPos.substring(2));
 
@@ -128,7 +134,7 @@ public class State
 		}
 	}
 
-	/** */
+	/**  */
 	private int[][] shallowCopyInstanceMatrix() {
 		int[][] newState = new int[3][3];
 		for (int r = 0; r < matrix.length; r++)
@@ -145,7 +151,7 @@ public class State
 	 *  @param r  a row index within the matrix
 	 *  @param c  a column index within the matrix
 	 */
-	private void swap(int[][] matrix, int zr, int zc, int r, int c) {
+	public static void swap(int[][] matrix, int zr, int zc, int r, int c) {
 		int temp = matrix[zr][zc];
 		matrix[zr][zc] = matrix[r][c];
 		matrix[r][c] = temp;
@@ -155,7 +161,7 @@ public class State
 	/** Validates if the given row or column index is within the 3x3 array range 
 	 *  @param i row or column index within the matrix
 	 *  @return true if index is between [0, 3) */
-	private boolean validRowOrCol(int i) {
+	public static boolean validRowOrCol(int i) {
 		return i >= 0 && i < 3;
 	}
 	
@@ -169,36 +175,3 @@ public class State
 		System.out.println(dist);
 	}
 }
-
-
-
-
-
-
-
-
-
-//if (currState.isSolved())
-//	return;
-//
-//currState.evaluateChildStates();
-//int fMin = Integer.MAX_VALUE;
-//
-//int i = 0;
-//int[] estimatedDistances = new int[currState.childPuzzleState.size()];
-//for (PuzzleState puzzleState : currState.childPuzzleState) {
-//	int estimatedDistance = puzzleState.estimatedDistance();
-//	estimatedDistances[i++] = estimatedDistance;
-//	if (estimatedDistance < fMin)
-//		fMin = estimatedDistance;
-//}
-//
-//
-//for (i = 0; i < currState.childPuzzleState.size(); i++) {
-//	if (estimatedDistances[i] == fMin) {
-//		currState.childPuzzleState.get(i).costIncurred++;
-//		this.currState = currState.childPuzzleState.get(i);
-//		solve();
-//		return;
-//	}
-//}
