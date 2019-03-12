@@ -3,19 +3,20 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
-import java.util.Random;
 
 /** 
- * Implemented by:
+ * Authors:
  * - Kevin J Ramirez Pomales
  * - Irixa Vales Torres
  * - Christian Lopez Martinez
  * 
  * Giving an 8-puzzle with a 3×3 board with 8 tiles and one empty space (0), The objective 
  * is to implement the A* algorithm to solve this puzzle.
- *  - h(n) the heuristic component is the total Manhattan distance of the misplaced tiles.
- *  - g(n) is the actual cost incurred from the initial state to the current node. 
- *  - f(n) = g(n) + h(n), is the estimate of the distance from the current node to the goal.
+ *  <ul>
+ *  	<li>h(n) the heuristic component is the total Manhattan distance of the misplaced tiles.</li>
+ *      <li>g(n) is the actual cost incurred from the initial state to the current node.</li>
+ *  	<li>f(n) = g(n) + h(n), is the estimate of the distance from the current node to the goal.</li>
+ *  </ul>
  */
 public class EightPuzzle 
 {	
@@ -31,13 +32,27 @@ public class EightPuzzle
 	/** shall contain the path from initial state to goal state. */
 	LinkedList<State> path = new LinkedList<>();
 
-	/** map integer with 2d array position.  [int -> "row,col"] */
+	/** maps each integer values of goal matrix 
+	    with its position as a string.  
+	    map = [int -> "row,col"]
+	 */
 	static Map<Integer, String> goalMap;
 
+	/** Initializes both initial state and goal state as matrices (2d arrays)
+	 *  with the given states represented as strings */
 	public EightPuzzle(String initState, String goalState) {
-		this(EightPuzzle.createMatrix(initState), 
-				EightPuzzle.createMatrix(goalState));
+		this(Util.createMatrix(initState), 
+				Util.createMatrix(goalState));
 	}
+	
+	/** Initializes goal state and a randomly generated initial state as matrices (2d arrays) */
+	public EightPuzzle(int[][] goalMatrix) {
+		this(Util.shuffleMatrix(goalMatrix), 
+				goalMatrix);
+	}
+	
+	/** Initializes both initial state and goal state as matrices (2d arrays)
+	 *  with the given 2d arrays */
 	public EightPuzzle(int[][] initMatrix, int[][] goalMatrix) {
 		this.initMatrix = initMatrix;
 		this.goalMatrix = goalMatrix;
@@ -48,57 +63,6 @@ public class EightPuzzle
 				goalMap.put(goalMatrix[r][c], r+","+c);
 
 		qTrack.add(new State(initMatrix));
-	}
-	public EightPuzzle(int[][] goalMatrix) {
-		this.initMatrix = this.shuffleMatrix(goalMatrix, 10000);
-		this.goalMatrix = goalMatrix;
-		goalMap = new HashMap<>();
-
-		for (int r = 0; r < goalMatrix.length; r++)
-			for (int c = 0; c < goalMatrix[r].length; c++)
-				goalMap.put(goalMatrix[r][c], r+","+c);
-		
-		qTrack.add(new State(initMatrix));
-	}
-
-
-	/** creates a 2d array from the string given
-	 *  @param s string representation as a string 
-	 */
-	public static int[][] createMatrix(String s) {
-		int[][] matrix = new int[3][3];
-
-		int i = 0;
-		for (int r = 0; r < matrix.length; r++)
-			for (int c = 0; c < matrix[r].length; c++)
-				matrix[r][c] = Integer.parseInt(s.substring(i, i++ + 1));
-
-		return matrix;
-	}
-
-	/** creates a string array in order from 
-	 *  upper-left to lower-right of the 2d array.
-	 *  @param matrix 2d representation of the puzzle
-	 */
-	public static String createMatrixString(int[][] matrix) {
-		String s = "";
-		for (int r = 0; r < matrix.length; r++)
-			for (int c = 0; c < matrix[r].length; c++)
-				s += matrix[r][c];
-
-		return s;
-	}
-
-
-	/** prints the given matrix
-	 *  @param matrix 2d array to be printed */
-	public static void printMatrix(int[][] matrix) {
-		for (int r = 0; r < matrix.length; r++) {
-			for (int c = 0; c < matrix[r].length; c++)
-				System.out.print(matrix[r][c] +" ");
-			System.out.println();
-		}
-		System.out.println();
 	}
 
 
@@ -140,13 +104,13 @@ public class EightPuzzle
 	 * @param matrix the 2d dimensional array representation of the puzzle
 	 * @return true if total number of inversion is even.  Otherwise, false.
 	 */
-	public boolean isAdmissible(int[][] matrix) {
-		Integer[] arr = new Integer[matrix.length*matrix[0].length];
+	public boolean isAdmissible() {
+		Integer[] arr = new Integer[initMatrix.length*initMatrix[0].length];
 		int count = 0, k = 0;		
 
-		for (int i = 0; i < matrix.length; i++)
-			for (int j = 0; j < matrix[i].length; j++)
-				arr[k++]= matrix[i][j];
+		for (int i = 0; i < initMatrix.length; i++)
+			for (int j = 0; j < initMatrix[i].length; j++)
+				arr[k++]= initMatrix[i][j];
 
 		// count how many inversions the list has
 		for (int i = 0; i < arr.length-1; i++)
@@ -163,97 +127,50 @@ public class EightPuzzle
 	public void printPath() {
 		System.out.println("----- PATH FROM INITIAL TO GOAL STATE -----");
 		for (State state : this.path)
-			printMatrix(state.matrix);
-	}
-
-
-	public int[][] shuffleMatrix(int[][] matrix, int n) {
-		matrix = this.shallowCopyOfMatrix(matrix);
-		int posC0 = 2, posR0 = 2;
-		for (int i = 0; i < n; i++) {
-			Random rand = new Random();
-			int mv = rand.nextInt(3);
-			switch (mv) {
-			case 0:
-				if (State.validRowOrCol(posR0 - 1)) {
-					State.swap(matrix, posR0, posC0, posR0 - 1, posC0);
-					posR0--;
-				}
-				break;
-			case 1:
-				if (State.validRowOrCol(posR0 + 1)) {
-					State.swap(matrix, posR0, posC0, posR0 + 1, posC0);
-					posR0++;
-				}
-				break;
-			case 2:
-				if (State.validRowOrCol(posC0 - 1)) {
-					State.swap(matrix, posR0, posC0, posR0, posC0 - 1);
-					posC0--;
-				}
-				break;
-			case 3:
-				if (State.validRowOrCol(posC0 + 1)) {
-					State.swap(matrix, posR0, posC0, posR0, posC0 + 1);
-					posC0++;
-				}
-				break;
-			default:
-				break;
-			}
-		}
-
-		return matrix;
-	}
-
-	/**  */
-	private int[][] shallowCopyOfMatrix(int[][] matrix) {
-		int[][] newState = new int[3][3];
-		for (int r = 0; r < matrix.length; r++)
-			for (int c = 0; c < matrix[r].length; c++)
-				newState[r][c] = matrix[r][c];
-		return newState;
-	}
-
-
-	public void swap(int zr, int zc, int r, int c) {
-		int temp = initMatrix[zr][zc];
-		initMatrix[zr][zc] = initMatrix[r][c];
-		initMatrix[r][c] = temp;
+			Util.printMatrix(state.matrix);
 	}
 
 
 	public static void main(String[] args) 
 	{	
-		/** STATIC EXAMPLES **/
-		int[][] initMatrix = { {1, 8, 2}, {0, 4, 3}, {7, 6, 5} };
+		/*
+		 * Code to instantiate specific initial and goal matrix. 
+		 */
+//		int[][] initMatrix = { {1, 8, 2}, {0, 4, 3}, {7, 6, 5} };
+//		int[][] goalMatrix = { {1, 2, 3}, {4, 5, 6}, {7, 8, 0} };
+//		EightPuzzle eightPuzzle = new EightPuzzle(initMatrix, goalMatrix);
+
+		
+		/*
+		 * Code to instantiate specific initial and goal matrix
+		 * by writing them as strings.
+		 */
+//		String initState = "182043765";
+//		String goalState = "123456780";
+//		EightPuzzle eightPuzzle = new EightPuzzle(initState, goalState);
+		
+		
+		/* 
+		 * Code to instantiate specific goal matrix
+		 * and a random initial matrix
+		 */
 		int[][] goalMatrix = { {1, 2, 3}, {4, 5, 6}, {7, 8, 0} };
-
-		//		int[][] initMatrix = { {1, 2, 3}, {0, 4, 6}, {7, 5, 8} };
-		//		int[][] goalMatrix = { {1, 2, 3}, {4, 5, 6}, {7, 8, 0} };
-
-		//		int[][] initMatrix = { {1, 3, 6}, {5, 0, 2}, {4, 7, 8} };
-		//		int[][] goalMatrix = { {1, 2, 3}, {4, 5, 6}, {7, 8, 0} };
-
-
-		String initState = "182043765";
-		String goalState = "123456780";
-
-//				EightPuzzle eightPuzzle = new EightPuzzle(initState, goalState);
-//				EightPuzzle eightPuzzle = new EightPuzzle(initMatrix, goalMatrix);
 		EightPuzzle eightPuzzle = new EightPuzzle(goalMatrix);
-
+		
+		
+		/**********************************/
 		System.out.println("INITIAL STATE");
-		EightPuzzle.printMatrix(eightPuzzle.initMatrix);
+		Util.printMatrix(eightPuzzle.initMatrix);
 
 		System.out.println("GOAL STATE");
-		EightPuzzle.printMatrix(eightPuzzle.goalMatrix);
+		Util.printMatrix(eightPuzzle.goalMatrix);
 
 
-		if (eightPuzzle.isAdmissible(eightPuzzle.initMatrix)) {
+		if (eightPuzzle.isAdmissible()) {
 			eightPuzzle.solve();
 			eightPuzzle.printPath();
 		}
 		else System.out.println("Is not possible to solve the given initial state");
+		/**********************************/
 	}
 }
