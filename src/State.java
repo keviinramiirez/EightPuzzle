@@ -10,22 +10,41 @@ public class State
 	/** representation of the puzzle */
 	int[][] matrix;
 	
-	/**  */
+	/** 
+	    formally, cost incurred represents the 
+	    depth of where this state is on the tree 
+	 */
 	int costIncurred;
+	
+	/** link to its parent state */
 	State parent;
+	
+	/** list of all its next states */
 	LinkedList<State> childStates;
+	
+	/** position (as a string) of the zero value within the matrix */
 	private String zeroPos;
+	
+	/** total Manhattan Distance */
 	private int totalManhattanDistance;
 
 
+	/**  */
 	public State(int[][] matrix) { 
 		this(matrix, null, 0);
 	}
-	public State (int[][] matrix, int costIncurred) {
+	public State(int[][] matrix, int costIncurred) {
 		this(matrix, null, costIncurred);
 	}
 	/** 
-	 *  
+     *  <ul>
+	 *  	<li>initializes the matrix with the one given.</li>
+	 *  	<li>initializes the parent with the one given.</li>
+	 *  	<li>initializes the cost incurred with the one given.</li>
+	 *  	<li>initializes an empty list of child states.</li>
+	 *  	<li>locates/initializes the position of the zero value.</li>
+	 *  	<li>calculates/initializes the total Manhattan Distance.</li>
+     *  </ul>
 	 */
 	public State(int[][] matrix, State parent, int costIncurred) { 
 		this.matrix = matrix;
@@ -58,6 +77,7 @@ public class State
 		}
 	}
 	
+	/** return the parent instance */
 	public State getParent() { return this.parent; }
 		
 	/** true if the instance containing the total Manhattan Distance 
@@ -66,12 +86,14 @@ public class State
 		return totalManhattanDistance == 0;
 	}
 
-
+	/** return the estimated distance which is the sum
+	 *  of the cost incurred and total Manhattan Distance. */
 	public int estimatedDistance() {
 		return costIncurred + totalManhattanDistance;
 	}
 
 
+	/** counts how many misplaced values are within the instance matrix */
 	public int totalMisplaced() {
 		int count = 0;
 		for (int r = 0; r < matrix.length; r++)
@@ -97,14 +119,14 @@ public class State
 		// left of the zero value.  -1 represents that the particular 
 		// direction is out of bounds
 		int up = -1, right = -1, down = -1, left = -1;
-		if (validRowOrCol(rZero-1)) up    = matrix[rZero-1][cZero];
-		if (validRowOrCol(cZero-1)) left  = matrix[rZero][cZero-1];
-		if (validRowOrCol(cZero+1)) right = matrix[rZero][cZero+1];
-		if (validRowOrCol(rZero+1)) down  = matrix[rZero+1][cZero];
+		if (Util.validRowOrCol(rZero-1)) up    = matrix[rZero-1][cZero];
+		if (Util.validRowOrCol(cZero-1)) left  = matrix[rZero][cZero-1];
+		if (Util.validRowOrCol(cZero+1)) right = matrix[rZero][cZero+1];
+		if (Util.validRowOrCol(rZero+1)) down  = matrix[rZero+1][cZero];
 
 		// keeps track of previous estimated distances along the process
 		int prevDist = Integer.MAX_VALUE;
-		
+
 		// evaluate/iterate over all values within the 2d array
 		for (int r = 0; r < matrix.length; r++) {
 			for (int c = 0; c < matrix[r].length; c++) {
@@ -112,8 +134,8 @@ public class State
 				
 				// check if current value is either above, right, below, or left of the zero value
 				if (currVal == up || currVal == right || currVal == down || currVal == left) {
-					int[][] newState = shallowCopyInstanceMatrix();
-					swap(newState, rZero, cZero, r, c);
+					int[][] newState = Util.shallowCopyOf(matrix);
+					Util.swap(newState, rZero, cZero, r, c);
 
 					State currState = new State(newState, this.costIncurred+1);
 					int currDist = currState.estimatedDistance();
@@ -126,52 +148,13 @@ public class State
 
 					if (currDist <= prevDist) {
 						prevDist = currDist;
+						currState.parent = this;
 						childStates.add(currState);
 					}
 					/*********************/
 				}
 			}
 		}
-	}
-
-	/**  */
-	private int[][] shallowCopyInstanceMatrix() {
-		int[][] newState = new int[3][3];
-		for (int r = 0; r < matrix.length; r++)
-			for (int c = 0; c < matrix[r].length; c++)
-				newState[r][c] = matrix[r][c];
-		return newState;
-	}
-
-	/** Swaps the the zero value that is in the <i>(zr, zc)</i> position 
-	 *  within the given matrix with the value in position <i>(r, c)</i>
-	 *  @param matrix the 2d dimensional array representation of the puzzle
-	 *  @param zr the row index of the zero value within the matrix
-	 *  @param zc the column index of the zero value within the matrix
-	 *  @param r  a row index within the matrix
-	 *  @param c  a column index within the matrix
-	 */
-	public static void swap(int[][] matrix, int zr, int zc, int r, int c) {
-		int temp = matrix[zr][zc];
-		matrix[zr][zc] = matrix[r][c];
-		matrix[r][c] = temp;
-	}
-
-
-	/** Validates if the given row or column index is within the 3x3 array range 
-	 *  @param i row or column index within the matrix
-	 *  @return true if index is between [0, 3) */
-	public static boolean validRowOrCol(int i) {
-		return i >= 0 && i < 3;
-	}
-	
-	/** Print the given matrix and the given distance  */
-	public void printMatrix(int[][] matrix, int dist) {
-		for (int r = 0; r < matrix.length; r++) {
-			for (int c = 0; c < matrix[r].length; c++)
-				System.out.print(matrix[r][c] +" ");
-			System.out.println();
-		}
-		System.out.println(dist);
+		System.out.print("");
 	}
 }
